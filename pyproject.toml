@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "prescriptions-api"
+version = "0.1.0"
+description = ""
+authors = ["Wesley Mendes <wesley@wesleymendes.com.br>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.72.0"
+uvicorn = "^0.17.0"
+SQLAlchemy = "^1.4.30"
+psycopg2-binary = "^2.9.3"
+python-dotenv = "^0.19.2"
+python-decouple = "^3.5"
+aiohttp = "^3.8.1"
+cchardet = "^2.1.7"
+aiodns = "^3.0.0"
+backoff = "^1.11.1"
+
+[tool.poetry.dev-dependencies]
+mypy = "^0.931"
+black = "^21.12b0"
+flake8 = "^4.0.1"
+pytest = "^6.2.5"
+pytest-flake8 = "^1.0.7"
+requests = "^2.27.1"
+pytest-pythonpath = "^0.7.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
