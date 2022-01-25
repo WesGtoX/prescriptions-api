@@ -1,6 +1,8 @@
 import asyncio
 import logging
+
 from typing import Dict, Any
+from fastapi import Request
 
 import aiohttp
 
@@ -21,21 +23,30 @@ class Prescription:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def create(self, data: models.Prescription):
-        self.db.add(data)
-        # self.db.flush()
+    @staticmethod
+    def format_data(prefix: str, values: Dict[str, Any]) -> Dict[str, int]:
+        return {prefix + str(key): val for key, val in values.items()}
 
-    def commit(self, data: models.Prescription):
+    @staticmethod
+    def parse_data(prescription: schemas.PrescriptionCreate) -> Dict[str, int]:
+        return dict(
+            clinic_id=prescription.clinic.id,
+            physician_id=prescription.physician.id,
+            patient_id=prescription.patient.id,
+            text=prescription.text,
+        )
+
+    def create(self, data: models.Prescription) -> None:
+        self.db.add(data)
+
+    def commit(self, data: models.Prescription) -> None:
         self.db.commit()
         self.db.refresh(data)
 
-    def rollback(self):
+    def rollback(self) -> None:
         self.db.rollback()
 
-    def format_data(self, prefix: str, values: Dict[str, Any]):
-        return {prefix + str(key): val for key, val in values.items()}
-
-    def pase_metrics_data(self, prescription: models.Prescription, dependents: Dependents):
+    def pase_metrics_data(self, prescription: models.Prescription, dependents: Dependents) -> Dict[str, int]:
         physician = Physician(**dependents.dependent.get('physician'))
         patient = Patient(**dependents.dependent.get('patient'))
 
@@ -51,17 +62,17 @@ class Prescription:
 
         return metrics
 
-    async def save_metrics(self, prescription: models.Prescription, dependents: Dependents):
+    async def save_metrics(self, prescription: models.Prescription, dependents: Dependents) -> aiohttp.ClientResponse:
         try:
             data = self.pase_metrics_data(prescription, dependents)
             return await dependents.post_metrics(data=data)
         except aiohttp.ClientResponseError as e:
             raise e
 
-    async def create_metrics(self, prescription: models.Prescription):
+    async def create_metrics(self, request: Request, prescription: models.Prescription) -> aiohttp.ClientResponse:
         async with aiohttp.ClientSession(raise_for_status=True) as session:
             try:
-                dependents = Dependents(session=session, base_uri=settings.DEPENDENT_SERVICES_URL)
+                dependents = Dependents(request=request, session=session, base_uri=settings.DEPENDENT_SERVICES_URL)
                 tasks = [
                     asyncio.create_task(
                         getattr(dependents, f'get_{m}')(getattr(prescription, f'{m}_id'))
@@ -75,21 +86,12 @@ class Prescription:
                 logger.error(e)
                 raise e
 
-    def parse_data(self, prescription: schemas.PrescriptionCreate):
-        data = dict(
-            clinic_id=prescription.clinic.id,
-            physician_id=prescription.physician.id,
-            patient_id=prescription.patient.id,
-            text=prescription.text,
-        )
-        return data
-
-    async def process(self, prescription: schemas.PrescriptionCreate):
+    async def process(self, request: Request, prescription: schemas.PrescriptionCreate) -> schemas.Prescription:
         prescription_data = self.parse_data(prescription)
         db_prescription = models.Prescription(**prescription_data)
 
         self.create(db_prescription)
-        await self.create_metrics(db_prescription)
+        await self.create_metrics(request, db_prescription)
         self.commit(db_prescription)
 
         return schemas.Prescription(id=db_prescription.id, **prescription.dict())

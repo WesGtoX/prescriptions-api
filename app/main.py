@@ -13,6 +13,7 @@ app = FastAPI(
     description='API to insert new prescriptions.',
 )
 
+
 @app.on_event('startup')
 async def startup_event() -> None:
     app.state.redis = await get_redis_pool()
