@@ -33,24 +33,3 @@ metrics_mock = {
 }
 
 prescription_mock = Prescription(**dict(id=1, clinic_id=1, physician_id=1, patient_id=1, text='Dipirona 1x ao dia'))
-
-
-class Fake:
-
-    def rollback(self):
-        return True
-
-    def commit(self):
-        return True
-
-
-class FakeRequest:
-    json_return = {'foo': 'bar'}
-    status_code_return = 200
-
-    @property
-    def status_code(self):
-        return self.status_code_return
-
-    def json(self):
-        return self.json_return

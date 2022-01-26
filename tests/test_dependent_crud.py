@@ -78,7 +78,7 @@ async def test_get_physician_cache(redis) -> None:
 
         dependent = Dependents(redis, session, base_uri)
         result = await dependent.get_physician(physician_id=1)
-        assert result == {b'foo': b'1', b'bar': b'2'}
+        assert result == {'foo': '1', 'bar': '2'}
 
 
 @pytest.mark.asyncio
@@ -89,7 +89,7 @@ async def test_get_clinic_cache(redis) -> None:
 
         dependent = Dependents(redis, session, base_uri)
         result = await dependent.get_clinic(clinic_id=1)
-        assert result == {b'fizz': b'3', b'buzz': b'4'}
+        assert result == {'fizz': '3', 'buzz': '4'}
 
 
 @pytest.mark.asyncio
@@ -100,4 +100,4 @@ async def test_get_patient_cache(redis) -> None:
 
         dependent = Dependents(redis, session, base_uri)
         result = await dependent.get_patient(patient_id=1)
-        assert result == {b'bar': b'5', b'buzz': b'6'}
+        assert result == {'bar': '5', 'buzz': '6'}
