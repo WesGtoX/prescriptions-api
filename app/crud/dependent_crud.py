@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Union
 
 import aiohttp
 import backoff
@@ -54,7 +54,7 @@ class Dependents:
             )
 
     @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=RETRY.get('clinic'))
-    async def get_clinic(self, clinic_id: int) -> aiohttp.ClientResponse | Dict:
+    async def get_clinic(self, clinic_id: int) -> Union[aiohttp.ClientResponse, Dict]:
         try:
             value = await get_redis(redis=self.redis, name='clinic')
             if value:
