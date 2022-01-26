@@ -14,6 +14,7 @@
 
 <p align="center">
   <img alt="Prescriptions API CI" src="https://github.com/WesGtoX/prescriptions-api/actions/workflows/fastapi-app.yml/badge.svg" />
+  <img alt="codecov" src="https://codecov.io/gh/WesGtoX/prescriptions-api/branch/main/graph/badge.svg?token=Z7A8JVCI7W" />
   <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/wesgtox/prescriptions-api?style=plastic" />
   <img alt="GitHub language count" src="https://img.shields.io/github/languages/count/wesgtox/prescriptions-api?style=plastic" />
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/wesgtox/prescriptions-api?style=plastic" />
@@ -37,6 +38,8 @@ This project was developed with the following technologies:
 
 - [Python](https://www.python.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Redis](https://redis.io/)
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
@@ -60,14 +63,11 @@ git clone https://github.com/WesGtoX/prescriptions-api.git
 ```bash
 cp .env.sample .env
 ```
-
-#### Run using Docker and Docker Compose
-
-1. Run:
+3. Run:
 ```bash
 make run
 ```
-2. Run tests:
+4. Run tests:
 ```bash
 make test
 ```
@@ -75,7 +75,10 @@ make test
 
 ## Usage
 
-[Prescriptions Documentation]()
+- [Prescription Live API](https://prescriptions-api-wes.herokuapp.com/)
+- [Prescriptions Docs](https://prescriptions-api-wes.herokuapp.com/docs)
+- [Prescriptions Redoc](https://prescriptions-api-wes.herokuapp.com/redoc)
+- [ScanAPI Report](https://python-challenge-scanapi.dev.iclinic.com.br/result?o=1643176921)
 
 
 ## Roadmap
