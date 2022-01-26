@@ -1,0 +1,41 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Authentication:
+      - Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJzZXJ2aWNlIjoiY2xpbmljcyJ9.r3w8KS4LfkKqZhOUK8YhVGJEqnReSClLCMBIJRQ
+    method: GET
+    uri: https://mock-api-challenge.dev.iclinic.com.br/clinics/1
+  response:
+    body:
+      string: '{"name":"Maureen Wintheiser","id":"1"}'
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With,Content-Type,Cache-Control,access_token
+      Access-Control-Allow-Methods:
+      - GET,PUT,POST,DELETE,OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '38'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 26 Jan 2022 03:33:36 GMT
+      Etag:
+      - '"877256376"'
+      Server:
+      - Cowboy
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 vegur
+      X-Powered-By:
+      - Express
+    status:
+      code: 200
+      message: OK
+    url: https://mock-api-challenge.dev.iclinic.com.br/clinics/1
+version: 1

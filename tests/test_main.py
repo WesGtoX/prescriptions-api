@@ -1,4 +1,5 @@
 import pytest
+import vcr
 
 from fastapi import status
 
@@ -19,6 +20,7 @@ data = {
 }
 
 
+@vcr.use_cassette('tests/fixtures/vcr_cassettes/create_prescription.yaml')
 @pytest.mark.asyncio
 async def test_create_prescription(mocker, test_client, redis) -> None:
     mocker.patch.object(Prescription, 'commit', return_value=True)
@@ -39,6 +41,7 @@ async def test_create_prescription(mocker, test_client, redis) -> None:
     assert result.get('text') == data.get('text')
 
 
+@vcr.use_cassette('tests/fixtures/vcr_cassettes/physicians_service_not_available.yaml')
 @pytest.mark.asyncio
 async def test_physicians_service_not_available(monkeypatch, test_client, redis) -> None:
     monkeypatch.setattr(settings, 'DEPENDENT_SERVICES_URL', 'http://test')
@@ -49,6 +52,7 @@ async def test_physicians_service_not_available(monkeypatch, test_client, redis)
     assert response.json() == {'detail': {'message': 'physicians service not available', 'code': '05'}}
 
 
+@vcr.use_cassette('tests/fixtures/vcr_cassettes/patients_service_not_available.yaml')
 @pytest.mark.asyncio
 async def test_patients_service_not_available(monkeypatch, test_client, redis) -> None:
     monkeypatch.setattr(settings, 'DEPENDENT_SERVICES_URL', 'http://test')
@@ -62,6 +66,7 @@ async def test_patients_service_not_available(monkeypatch, test_client, redis) -
     assert response.json() == {'detail': {'message': 'patients service not available', 'code': '06'}}
 
 
+@vcr.use_cassette('tests/fixtures/vcr_cassettes/metrics_service_not_available.yaml')
 @pytest.mark.asyncio
 async def test_metrics_service_not_available(test_client, monkeypatch, redis) -> None:
     monkeypatch.setattr(settings, 'DEPENDENT_SERVICES_URL', 'http://test')
