@@ -8,7 +8,6 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install dependencies
-COPY ./requirements.txt /code/requirements.txt
 COPY ./requirements-dev.txt /code/requirements-dev.txt
 
 RUN pip install --upgrade pip && \
