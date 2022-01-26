@@ -1,5 +1,5 @@
 from typing import Dict
-from fastapi import FastAPI, Depends, Request, status
+from fastapi import FastAPI, Depends, status
 from sqlalchemy.orm import Session
 
 from app import crud, schemas, dependencies, docs
@@ -31,7 +31,7 @@ def hello_world() -> Dict[str, str]:
 
 @app.post('/prescriptions/', response_model=schemas.Prescription,
           status_code=status.HTTP_201_CREATED, tags=['prescriptions'])
-async def create_prescription(request: Request, prescription: schemas.PrescriptionCreate,
+async def create_prescription(prescription: schemas.PrescriptionCreate,
                               db: Session = Depends(dependencies.get_db)) -> schemas.Prescription:
-    db_prescription = crud.Prescription(db=db)
-    return await db_prescription.process(request=request, prescription=prescription)
+    db_prescription = crud.Prescription(redis=app.state.redis, db=db)
+    return await db_prescription.process(prescription=prescription)

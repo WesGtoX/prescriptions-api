@@ -3,7 +3,7 @@ from typing import Dict
 
 import aiohttp
 import backoff
-from fastapi import Request, HTTPException, status
+from fastapi import HTTPException, status
 
 from app.core.config import settings
 from app.db.redis import get_redis, set_redis
@@ -17,16 +17,16 @@ RETRY = {'physician': 2, 'clinic': 3, 'patient': 2, 'metrics': 5}
 
 class Dependents:
 
-    def __init__(self, session: aiohttp.ClientSession, request: Request, base_uri: str) -> None:
+    def __init__(self, redis, session: aiohttp.ClientSession, base_uri: str) -> None:
+        self.redis = redis
         self.session = session
         self.base_uri = base_uri
-        self.request = request
         self.dependent: Dict[str, int] = {}
 
     @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=RETRY.get('physician'))
     async def get_physician(self, physician_id: int) -> aiohttp.ClientResponse:
         try:
-            value = await get_redis(request=self.request, name='physician')
+            value = await get_redis(redis=self.redis, name='physician')
             if value:
                 self.dependent['physician'] = value
                 return value
@@ -36,12 +36,12 @@ class Dependents:
             async with await self.session.get(url=url, headers=headers, timeout=TIMEOUT.get('physician')) as response:
                 self.dependent['physician'] = await response.json()
                 await set_redis(
-                    request=self.request, name='physician',
+                    redis=self.redis, name='physician',
                     mapping=self.dependent.get('physician'),
                     expires=settings.TTL_PHYSICIAN
                 )
                 return await response.json()
-        except aiohttp.ClientResponseError as e:
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
             if hasattr(e, 'status') and getattr(e, 'status') == status.HTTP_404_NOT_FOUND:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -54,9 +54,9 @@ class Dependents:
             )
 
     @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=RETRY.get('clinic'))
-    async def get_clinic(self, clinic_id: int) -> aiohttp.ClientResponse | None:
+    async def get_clinic(self, clinic_id: int) -> aiohttp.ClientResponse | Dict:
         try:
-            value = await get_redis(request=self.request, name='clinic')
+            value = await get_redis(redis=self.redis, name='clinic')
             if value:
                 self.dependent['clinic'] = value
                 return value
@@ -66,19 +66,19 @@ class Dependents:
             async with await self.session.get(url=url, headers=headers, timeout=TIMEOUT.get('clinic')) as response:
                 self.dependent['clinic'] = await response.json()
                 await set_redis(
-                    request=self.request, name='clinic',
+                    redis=self.redis, name='clinic',
                     mapping=self.dependent.get('clinic'),
                     expires=settings.TTL_CLINIC
                 )
                 return await response.json()
-        except aiohttp.ClientResponseError as e:
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
             logger.error(e)
-            return None
+            return {}
 
     @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=RETRY.get('patient'))
     async def get_patient(self, patient_id: int) -> aiohttp.ClientResponse:
         try:
-            value = await get_redis(request=self.request, name='patient')
+            value = await get_redis(redis=self.redis, name='patient')
             if value:
                 self.dependent['patient'] = value
                 return value
@@ -88,16 +88,16 @@ class Dependents:
             async with await self.session.get(url=url, headers=headers, timeout=TIMEOUT.get('patient')) as response:
                 self.dependent['patient'] = await response.json()
                 await set_redis(
-                    request=self.request, name='patient',
+                    redis=self.redis, name='patient',
                     mapping=self.dependent.get('patient'),
                     expires=settings.TTL_PATIENT
                 )
                 return await response.json()
-        except aiohttp.ClientResponseError as e:
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
             if hasattr(e, 'status') and getattr(e, 'status') == status.HTTP_404_NOT_FOUND:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(message='patients service not available', code='03')
+                    detail=dict(message='patient not found', code='03')
                 )
 
             raise HTTPException(
@@ -113,7 +113,7 @@ class Dependents:
             async with await self.session.post(url=url, data=data, headers=headers,
                                                timeout=TIMEOUT.get('metrics')) as response:
                 return await response.json()
-        except aiohttp.ClientResponseError:
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=dict(message='metrics service not available', code='04')

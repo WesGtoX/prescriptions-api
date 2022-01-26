@@ -1,11 +1,8 @@
 import asyncio
 import logging
-
-from typing import Dict, Any
-from fastapi import Request
-
 import aiohttp
 
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -20,7 +17,8 @@ METHODS = ['physician', 'clinic', 'patient']
 
 class Prescription:
 
-    def __init__(self, db: Session) -> None:
+    def __init__(self, redis, db: Session) -> None:
+        self.redis = redis
         self.db = db
 
     @staticmethod
@@ -62,17 +60,23 @@ class Prescription:
 
         return metrics
 
+    def create_prescription(self, data: Dict[str, int]) -> models.Prescription:
+        return models.Prescription(**data)
+
     async def save_metrics(self, prescription: models.Prescription, dependents: Dependents) -> aiohttp.ClientResponse:
         try:
             data = self.pase_metrics_data(prescription, dependents)
             return await dependents.post_metrics(data=data)
-        except aiohttp.ClientResponseError as e:
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
             raise e
 
-    async def create_metrics(self, request: Request, prescription: models.Prescription) -> aiohttp.ClientResponse:
+    async def create_metrics(self, prescription: models.Prescription) -> aiohttp.ClientResponse:
         async with aiohttp.ClientSession(raise_for_status=True) as session:
             try:
-                dependents = Dependents(request=request, session=session, base_uri=settings.DEPENDENT_SERVICES_URL)
+                dependents = Dependents(
+                    redis=self.redis, session=session,
+                    base_uri=settings.DEPENDENT_SERVICES_URL
+                )
                 tasks = [
                     asyncio.create_task(
                         getattr(dependents, f'get_{m}')(getattr(prescription, f'{m}_id'))
@@ -81,17 +85,17 @@ class Prescription:
                 await asyncio.gather(*tasks)
 
                 return await self.save_metrics(prescription, dependents)
-            except aiohttp.ClientResponseError as e:
+            except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
                 self.rollback()
                 logger.error(e)
                 raise e
 
-    async def process(self, request: Request, prescription: schemas.PrescriptionCreate) -> schemas.Prescription:
+    async def process(self, prescription: schemas.PrescriptionCreate) -> schemas.Prescription:
         prescription_data = self.parse_data(prescription)
-        db_prescription = models.Prescription(**prescription_data)
+        db_prescription = self.create_prescription(prescription_data)
 
         self.create(db_prescription)
-        await self.create_metrics(request, db_prescription)
+        await self.create_metrics(db_prescription)
         self.commit(db_prescription)
 
         return schemas.Prescription(id=db_prescription.id, **prescription.dict())
