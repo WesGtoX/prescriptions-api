@@ -90,7 +90,7 @@ class Prescription:
                 logger.error(e)
                 raise e
 
-    async def process(self, prescription: schemas.PrescriptionCreate) -> schemas.Prescription:
+    async def process(self, prescription: schemas.PrescriptionCreate) -> schemas.PrescriptionRetrieve:
         prescription_data = self.parse_data(prescription)
         db_prescription = self.create_prescription(prescription_data)
 
@@ -98,4 +98,4 @@ class Prescription:
         await self.create_metrics(db_prescription)
         self.commit(db_prescription)
 
-        return schemas.Prescription(id=db_prescription.id, **prescription.dict())
+        return schemas.PrescriptionRetrieve(id=db_prescription.id, **prescription.dict())

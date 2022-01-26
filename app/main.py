@@ -29,9 +29,10 @@ def hello_world() -> Dict[str, str]:
     return {'hello_world': 'Prescriptions API'}
 
 
-@app.post('/prescriptions/', response_model=schemas.Prescription,
+@app.post('/prescriptions/', response_model=schemas.DataRetrieve,
           status_code=status.HTTP_201_CREATED, tags=['prescriptions'])
 async def create_prescription(prescription: schemas.PrescriptionCreate,
-                              db: Session = Depends(dependencies.get_db)) -> schemas.Prescription:
+                              db: Session = Depends(dependencies.get_db)) -> schemas.DataRetrieve:
     db_prescription = crud.Prescription(redis=app.state.redis, db=db)
-    return await db_prescription.process(prescription=prescription)
+    result = await db_prescription.process(prescription=prescription)
+    return schemas.DataRetrieve(**{'data': result})

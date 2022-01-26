@@ -113,7 +113,8 @@ class Dependents:
             async with await self.session.post(url=url, data=data, headers=headers,
                                                timeout=TIMEOUT.get('metrics')) as response:
                 return await response.json()
-        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError):
+        except (aiohttp.ClientResponseError, aiohttp.ClientConnectorError) as e:
+            logger.error(e)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=dict(message='metrics service not available', code='04')

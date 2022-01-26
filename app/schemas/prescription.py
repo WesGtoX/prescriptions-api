@@ -29,3 +29,18 @@ class Prescription(PrescriptionCreate):
 
     class Config:
         orm_mode = True
+
+
+class PrescriptionRetrieve(BaseModel):
+    id: int
+    clinic: Clinic
+    physician: Patient
+    patient: Physician
+    text: str
+
+    class Config:
+        orm_mode = True
+
+
+class DataRetrieve(BaseModel):
+    data: PrescriptionRetrieve

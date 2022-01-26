@@ -3,10 +3,12 @@ from decouple import config
 
 
 class Settings(BaseSettings):
-    SQLALCHEMY_DATABASE_URL: str = config('DATABASE_URL', default='postgres://prescription:prescription@db:5432/prescription')
+    SQLALCHEMY_DATABASE_URL: str = config('DATABASE_URL', default='sqlite:///./prescriptions.db')
     REDIS_URL: str = config('REDIS_URL', default='redis://localhost')
 
-    DEPENDENT_SERVICES_URL: str = config('DEPENDENT_SERVICES_URL', default='')
+    DEPENDENT_SERVICES_URL: str = config(
+        'DEPENDENT_SERVICES_URL', default='https://mock-api-challenge.dev.iclinic.com.br'
+    )
 
     PHYSICIANS_AUTH: str = config('PHYSICIANS_AUTH', default='')
     CLINICS_AUTH: str = config('CLINICS_AUTH', default='')
